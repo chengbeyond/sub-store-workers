@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 # For production: run `wrangler kv namespace create SUB_STORE_DATA` and fill in the id
 [[kv_namespaces]]
 binding = "SUB_STORE_DATA"
-id = "7cdf36c747a54c0cb9a4c2a33cc73c8d"
+id = "c5f6b69d7ad54aad8d1e09e5400bb153"
 
 # 定时同步（每天 23:55 执行）
 [triggers]
