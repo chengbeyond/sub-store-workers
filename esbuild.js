@@ -2,10 +2,35 @@
 const { build } = require('esbuild');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 // 路径配置
 const WORKERS_SRC = path.resolve(__dirname, 'src');
-const ORIGINAL_SRC = path.resolve(__dirname, '..', 'Sub-Store', 'backend', 'src');
+let ORIGINAL_SRC = path.resolve(__dirname, '..', 'Sub-Store', 'backend', 'src');
+
+/** 确保原始源码存在（适配 Cloudflare 等直接部署环境） */
+async function ensureOriginalSource() {
+    if (fs.existsSync(ORIGINAL_SRC)) return;
+
+    console.log('Original Sub-Store source not found. Attempting to clone...');
+    const parentDir = path.resolve(__dirname, '..');
+    const subStoreDir = path.join(parentDir, 'Sub-Store');
+
+    try {
+        // 尝试在父目录克隆（标准结构）
+        if (!fs.existsSync(subStoreDir)) {
+            console.log(`Cloning Sub-Store into ${subStoreDir}...`);
+            execSync(`git clone --depth 1 https://github.com/sub-store-org/Sub-Store.git "${subStoreDir}"`, { stdio: 'inherit' });
+        }
+    } catch (e) {
+        console.warn('Failed to clone into parent directory. Trying current directory...');
+        const localSubStoreDir = path.join(__dirname, 'Sub-Store');
+        if (!fs.existsSync(localSubStoreDir)) {
+            execSync(`git clone --depth 1 https://github.com/sub-store-org/Sub-Store.git "${localSubStoreDir}"`, { stdio: 'inherit' });
+        }
+        ORIGINAL_SRC = path.join(localSubStoreDir, 'backend', 'src');
+    }
+}
 
 /** 插件：路径别名解析 */
 function resolveFile(basePath) {
@@ -46,6 +71,13 @@ const aliasPlugin = {
             if (originalResolved) return { path: originalResolved };
 
             console.warn(`[alias] Could not resolve: ${args.path}`);
+            return null;
+        });
+
+        // 解析 Sub-Store/backend/package.json (适配 env.js 中的相对路径)
+        build.onResolve({ filter: /Sub-Store\/backend\/package\.json$/ }, (args) => {
+            const pkgPath = path.resolve(path.dirname(ORIGINAL_SRC), 'package.json');
+            if (fs.existsSync(pkgPath)) return { path: pkgPath };
             return null;
         });
     },
@@ -260,6 +292,14 @@ const nodeStubPlugin = {
 };
 
 !(async () => {
+    await ensureOriginalSource();
+    
+    // 确保 dist 目录存在
+    const distDir = path.join(__dirname, 'dist');
+    if (!fs.existsSync(distDir)) {
+        fs.mkdirSync(distDir, { recursive: true });
+    }
+
     console.log('Building Sub-Store Workers...');
     console.log(`Workers source: ${WORKERS_SRC}`);
     console.log(`Original source: ${ORIGINAL_SRC}`);

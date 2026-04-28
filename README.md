@@ -20,7 +20,7 @@ Sub-Store 后端的 Cloudflare Workers 移植版
 </a>
 </p>
 
-> **注意**：一键部署按钮**仅供参考**，由于项目需要本地构建（esbuild + Sub-Store 源码），实际无法直接通过此按钮完成部署。请参照下方[手动部署步骤](#部署)。
+> **注意**：本项目已支持 **Cloudflare Pages / Workers 直接关联仓库部署**。构建脚本 `esbuild.js` 会在构建时自动下载所需的 Sub-Store 源码，无需手动准备环境。
 
 ## 简介
 
@@ -76,14 +76,8 @@ esbuild.js                    ← 构建脚本，通过插件桥接两者
 ### 1. 克隆仓库
 
 ```bash
-# 目录结构必须如下：
-# parent/
-#   ├── Sub-Store/          ← 原始后端源码
-#   └── sub-store-workers/  ← 本项目
-
-git clone https://github.com/sub-store-org/Sub-Store.git
+# 核心步骤：直接克隆本项目即可（Sub-Store 源码将由构建脚本自动处理）
 git clone https://github.com/Yu9191/sub-store-workers.git
-
 cd sub-store-workers
 npm install
 ```
@@ -447,17 +441,15 @@ npm run deploy
 <details>
 <summary><b>更新 Sub-Store 原始仓库</b></summary>
 
-本项目不会自动同步 Sub-Store 原始仓库的更新。当原始仓库有新版本时，手动执行：
+本项目构建脚本会自动拉取 Sub-Store 源码。如果需要同步上游最新代码，只需手动删除旧源码目录后重新部署：
 
 ```bash
-cd Sub-Store
-git pull
-
-cd ../sub-store-workers
+# 删除旧源码以便构建脚本重新拉取最新版
+rm -rf ../Sub-Store
 npm run deploy
 ```
 
-esbuild 构建时会从 `Sub-Store/backend/src/` 读取最新源码，重新 build 即可包含新功能。
+esbuild 构建时会自动下载并从 `Sub-Store/backend/src/` 读取源码，重新 build 即可包含新功能。
 
 </details>
 
