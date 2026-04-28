@@ -1,0 +1,11 @@
+#!name=Sub-Store Workers Panel
+#!desc=Monitor Cloudflare Workers/Pages usage & Sub-Store status
+#!category=Tool
+#!arguments=ID:"",Token:"",Limit:"100000",SubStoreURL:"",Lang:"en"
+#!arguments-desc=ID: Cloudflare Account ID\nToken: Cloudflare API Token (需要 Account Analytics 读取权限)\nLimit: 每日请求额度(免费版 100000)\nSubStoreURL: Sub-Store 后端完整地址(可选)\nLang: 语言 en/cn
+
+[Script]
+SubStorePanel = type=generic, script-path=https://raw.githubusercontent.com/Yu9191/sub-store-workers/main/surge/SubStorePanel.js, argument="{{{ID}}},{{{Token}}},{{{Limit}}},{{{SubStoreURL}}},{{{Lang}}}", timeout=15
+
+[Panel]
+SubStorePanel = script-name=SubStorePanel, update-interval=600
